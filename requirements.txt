@@ -1,0 +1,5 @@
+numpy>=1.25.2
+openpyxl>=3.1.2
+pandas>=2.0.3
+pyexcel>=0.7.0
+pyexcel-io>=0.6.6

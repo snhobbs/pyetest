@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 from setuptools import setup, find_packages
 
+with open("requirements.txt", 'r') as f:
+    requirements = f.readlines()
+
 with open("README.md", 'r') as f:
     description = f.read()
 
@@ -19,7 +22,7 @@ setup(name='pyetest',
           "Operating System :: OS Independent",
       ],
       python_requires='>=3.6',
-      #install_requires=[],
+      install_requires=requirements,
       test_suite='nose.collector',
       tests_require=['nose'],
       scripts=[],
