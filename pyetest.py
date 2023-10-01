@@ -4,6 +4,19 @@ import shutil
 import logging
 import os
 import openpyxl
+import pandas
+import numpy
+
+def worksheet_to_df(worksheet):
+    '''
+    Turn a openpyxl worksheet and create a pandas DataFrame. Drop all rows that are completely empty.
+    :param openpyxl.Worksheet worksheet:
+    '''
+    wb_data = list(worksheet.values)
+    df = pandas.DataFrame(wb_data[1:], columns=wb_data[0])
+    df = df.fillna(value=numpy.nan)
+    df.dropna(how="all", axis=0, inplace=True) # if all entries as NA drop them
+    return df
 
 
 def reload_spreadsheet(workbook):
@@ -11,6 +24,7 @@ def reload_spreadsheet(workbook):
     Uses libreoffice to fill in the cached values.
     Will not update the file if the exported filename is the same.
     Filename can be any type of spreadsheet
+    :param Workbook workbook:
     '''
     dir_a = tempfile.mkdtemp()
     dir_b = tempfile.mkdtemp()
@@ -21,29 +35,6 @@ def reload_spreadsheet(workbook):
     subprocess.call(["libreoffice", "--convert-to", "xlsx", fname_intermediate, "--outdir", dir_b])
     #logging.getLogger().info("Generated %s", outname)
     return openpyxl.open(fname_final, data_only=True)
-
-
-def get_operator_dict():
-    '''
-    Returns a lookup table to use symbols that correspond to a comparison function
-    '''
-    def in_range(value, line) -> bool:
-        return value >= line["min"] and value <= line["max"]
-
-    def equals(value, line) -> bool:
-        return value == line["expected value"]
-
-    def ge(value, line) -> bool:
-        return value >= line["min"]
-
-    def le(value, line) -> bool:
-        return value <= line["min"]
-
-    def not_zero(value) -> bool:
-        return value !=0 and value is not None
-
-    operations = {"<=>": in_range, "==": equals, ">=": ge, "<=": le, "!=0": not_zero}
-    return operations
 
 
 def get_column_number_dict(workbook):
@@ -70,31 +61,50 @@ def compile_template(workbook, data):
             column = column_names["value"]+1 # counts from 1
             coordinate = workbook.active.cell(row[0].row, column=column).coordinate
             name = row[column_names["name"]].value
-            value = data[data["name"] == name].iloc[0]["value"]
+            if name is None:
+                continue
+            try:
+                value = data[data["name"] == name].iloc[0]["value"]
+            except IndexError:
+                logging.error("Entry %s not in data, either remove from tests or add to data", name)
+                raise
             workbook.active[coordinate] = value
     return workbook
 
 
-def run_text_matrix(data, test_matrix):
+def compile_test_template(workbook, data):
     '''
-    Runs through a dataframe and runs all tests. Returns a dataframe expanded with
-    the test results. All names in the test_matrix that have an operation defined need
-    to exist in data.
-    :param DataFrame data: name, value, unit [optional], type
-    :param DataFrame test_matrix: name, expected value, unit [optional], min, max, operation
-    :return DataFrame: test_matrix with the added value and pass fields
+    Takes a test template and fills in the values field.
+    Essentially identical to filling the data template without the measured filtering
+    :param Workbook workbook: Template to be filled, field names need to be correct
+    :param [dict, DataFrame] data: Table of names and values matching the names in the template
     '''
-    values = []
-    passes = []
+    starting_row = 1
+    column_names = get_column_number_dict(workbook)
+    for row in workbook.active.iter_rows(min_row=starting_row+1, values_only=False):
+        column = column_names["value"]+1 # counts from 1
+        coordinate = workbook.active.cell(row[0].row, column=column).coordinate
+        name = row[column_names["name"]].value
+        if name is None:
+            continue
+        try:
+            value = data[data["name"] == name].iloc[0]["value"]
+        except IndexError:
+            logging.error("Entry %s not in data, either remove from tests or add to data", name)
+            raise
+        workbook.active[coordinate] = value
+    return workbook
 
-    operations = get_operator_dict()
-    for i, test_line in test_matrix.iterrows():
-        line = data[data["name"] == test_line["name"]].iloc[0]
-        value = line["value"]
-        values.append(value)
-        passes.append(operations[test_line["operation"].strip("\"'")](value, test_line))
 
-    test_matrix["value"] = values
-    test_matrix["passes"] = passes
-    return test_matrix
-
+def pyetest_run(data_template, test_template, data_df):
+    '''
+    Fill the data workbook, reload it, turn the workbook into a dataframe, fill the tests with values and reload that. The test workbook can be turned into a dataframe and pass/fail test run.
+    :param Workbook data_template: Data template to be filled, field names need to be correct
+    :param Workbook test_template: Test template to be filled, field names need to be correct
+    :param [dict, DataFrame] data_df: Table of names and values matching the names in the template
+    '''
+    compiled_wb = compile_template(data_template, data_df)
+    data_workbook = reload_spreadsheet(compiled_wb)
+    compiled_test_wb = compile_test_template(test_template, worksheet_to_df(data_workbook.active))
+    test_workbook = reload_spreadsheet(compiled_test_wb)
+    return data_workbook, test_workbook

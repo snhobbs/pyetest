@@ -1,0 +1,44 @@
+name,value,unit,type
+version,,,measured
+firmware_version,,,measured
+compile_time,,,measured
+compile_date,,,measured
+slave_address,,,measured
+p3_3_micro_volts,,uV,measured
+p3_3_reading,,ADC,measured
++3.3GAIN,=1/2,,fixed
++3.3OFFSET,0,V,fixed
++3.3V,=B8/4096*3.3/B9,V,calculated
++3.3ERROR,=ABS(B11/24-1)*100,%,calculated
++3.3COMPARISONERROR,=ABS(B11/(B7/1000000)-1)*100,%,calculated
+p23_micro_volts,,uV,measured
+p23_reading,,ADC,measured
++23GAIN,=1/25,,fixed
++23OFFSET,0,V,fixed
++23V,=B15/4096*3.3/B16,V,calculated
++23ERROR,=ABS(B18/23.3-1)*100,%,calculated
++23COMPARISONERROR,=ABS(B18/(B14/1000000)-1)*100,%,calculated
+p5_micro_volts,,uV,measured
+p5_reading,,ADC,measured
++5OFFSET,0,V,fixed
++5GAIN,=5/2,,fixed
++5,=B22/4096*B24*3.3,V,calculated
++5ERROR,=ABS((B25/5-1)*100),%,calculated
++5COMPARISONERROR,=ABS(B25/(B21/1000000)-1)*100,%,calculated
+fault_status,,,measured
++5 Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,0)),2)",,calculated
++24 Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,1)),2)",,calculated
+Error Code 2,"=MOD(FLOOR.MATH(B$28/POWER(2,2)),2)",,calculated
+DAQ Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,3)),2)",,calculated
+Error Code 4,"=MOD(FLOOR.MATH(B$28/POWER(2,4)),2)",,calculated
+MW Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,5)),2)",,calculated
+Error Code 6,"=MOD(FLOOR.MATH(B$28/POWER(2,6)),2)",,calculated
+Error Code 7,"=MOD(FLOOR.MATH(B$28/POWER(2,7)),2)",,calculated
+Visible Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,8)),2)",,calculated
+Temperature Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,9)),2)",,calculated
+Moisture Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,10)),2)",,calculated
+Watchdog Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,11)),2)",,calculated
+Hardware Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,12)),2)",,calculated
+I2C Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,13)),2)",,calculated
+Error Code 14,"=MOD(FLOOR.MATH(B$28/POWER(2,14)),2)",,calculated
+Modbus Fault,"=MOD(FLOOR.MATH(B$28/POWER(2,15)),2)",,calculated
