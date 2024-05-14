@@ -16,7 +16,7 @@ reporting and diagnosis.
 ### Inputs
 
 #### Data template
-This is an xlsx spreadsheet which contains the test names, data source, and field type. The field type specifies if the data is measured, fixed, or calculated. Measured values will be filled in during the test. Fixed values are used in the spreadsheet for calculations of other values such as the number of bits in an ADC. Calculated values have a formula in the value field. 
+This is an xlsx spreadsheet which contains the test names, data source, and field type. The field type specifies if the data is measured, fixed, or calculated. Measured values will be filled in during the test. Fixed values are used in the spreadsheet for calculations of other values such as the number of bits in an ADC. Calculated values have a formula in the value field.
 
 |    | name                | value                                      | unit   | type       |
 |---:|:--------------------|:-------------------------------------------|:-------|:-----------|
@@ -253,4 +253,3 @@ False
          15   +5 Fault              0  None  NaN  NaN     1  False
          18  DAQ Fault              0  None  NaN  NaN     1  False
 ```
-
