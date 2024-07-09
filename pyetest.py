@@ -1,10 +1,13 @@
 import subprocess
 import tempfile
 import logging
+import typing
 import os
 import openpyxl
 import pandas
 import numpy
+
+_log = logging.getLogger("pyetest")
 
 
 def worksheet_to_df(worksheet):
@@ -77,7 +80,9 @@ def compile_template(workbook, data):
     return workbook
 
 
-def compile_test_template(workbook, data):
+def compile_test_template(
+    workbook: openpyxl.Workbook, data: pandas.DataFrame | dict[str, typing.Any]
+) -> openpyxl.Workbook:
     """
     Takes a test template and fills in the values field.
     Essentially identical to filling the data template without the measured filtering
@@ -86,6 +91,8 @@ def compile_test_template(workbook, data):
     """
     starting_row = 1
     column_names = get_column_number_dict(workbook)
+    _log.debug(column_names)
+    assert "value" in column_names
     for row in workbook.active.iter_rows(min_row=starting_row + 1, values_only=False):
         column = column_names["value"] + 1  # counts from 1
         coordinate = workbook.active.cell(row[0].row, column=column).coordinate
@@ -110,10 +117,12 @@ def pyetest_run(data_template, test_template, data_df):
     :param Workbook test_template: Test template to be filled, field names need to be correct
     :param [dict, DataFrame] data_df: Table of names and values matching the names in the template
     """
+    assert "value" in data_df.columns
     compiled_wb = compile_template(data_template, data_df)
+    _log.debug(compiled_wb)
     data_workbook = reload_spreadsheet(compiled_wb)
     compiled_test_wb = compile_test_template(
-        test_template, worksheet_to_df(data_workbook.active)
+        test_template, data=worksheet_to_df(data_workbook.active)
     )
     test_workbook = reload_spreadsheet(compiled_test_wb)
     return data_workbook, test_workbook
