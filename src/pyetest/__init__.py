@@ -1,1 +1,1 @@
-from . pyetest import *
+from .pyetest import *

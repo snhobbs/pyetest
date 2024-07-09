@@ -1,11 +1,12 @@
+import logging
+import os
 import subprocess
 import tempfile
-import logging
 import typing
-import os
+
+import numpy as np
 import openpyxl
-import pandas
-import numpy
+import pandas as pd
 
 _log = logging.getLogger("pyetest")
 
@@ -16,10 +17,9 @@ def worksheet_to_df(worksheet):
     :param openpyxl.Worksheet worksheet:
     """
     wb_data = list(worksheet.values)
-    df = pandas.DataFrame(wb_data[1:], columns=wb_data[0])
-    df = df.fillna(value=numpy.nan)
-    df.dropna(how="all", axis=0, inplace=True)  # if all entries as NA drop them
-    return df
+    df = pd.DataFrame(wb_data[1:], columns=wb_data[0])
+    df = df.fillna(value=np.nan)
+    return df.dropna(how="all", axis=0)  # if all entries as NA drop them
 
 
 def reload_spreadsheet(workbook):
@@ -71,7 +71,7 @@ def compile_template(workbook, data):
             try:
                 value = data[data["name"] == name].iloc[0]["value"]
             except IndexError:
-                logging.error(
+                logging.exception(
                     "Entry %s not in data, either remove from tests or add to data",
                     name,
                 )
@@ -81,7 +81,7 @@ def compile_template(workbook, data):
 
 
 def compile_test_template(
-    workbook: openpyxl.Workbook, data: pandas.DataFrame | dict[str, typing.Any]
+    workbook: openpyxl.Workbook, data: pd.DataFrame | dict[str, typing.Any]
 ) -> openpyxl.Workbook:
     """
     Takes a test template and fills in the values field.
@@ -102,7 +102,7 @@ def compile_test_template(
         try:
             value = data[data["name"] == name].iloc[0]["value"]
         except IndexError:
-            logging.error(
+            logging.exception(
                 "Entry %s not in data, either remove from tests or add to data", name
             )
             raise
